@@ -1,0 +1,13 @@
+{
+  "name": "Waterdrop",
+  "short_name": "Waterdrop",
+  "description": "A simple daily water tracker",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0A3D5C",
+  "theme_color": "#0A3D5C",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
