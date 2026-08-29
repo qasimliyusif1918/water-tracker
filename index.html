@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<title>Waterdrop</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Waterdrop">
+<meta name="theme-color" content="#0A3D5C">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ocean:#0A3D5C;
+    --ocean-deep:#082C42;
+    --aqua:#2EC4B6;
+    --aqua-soft:#BFF3EC;
+    --foam:#F4FBFA;
+    --mist:#E4F1F1;
+    --ink:#123240;
+    --ink-soft:#5C7A89;
+    --coral:#FF8C61;
+    --radius:22px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--foam);
+    color:var(--ink);
+    font-family:'Work Sans',-apple-system,sans-serif;
+    overscroll-behavior-y:none;
+  }
+  body{
+    padding-bottom:env(safe-area-inset-bottom);
+    min-height:100vh;
+  }
+  .app{
+    max-width:480px;
+    margin:0 auto;
+    padding:0 20px 40px;
+  }
+  header{
+    padding:26px 4px 10px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+  }
+  header h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:22px;
+    margin:0;
+    color:var(--ocean);
+    letter-spacing:-0.01em;
+  }
+  header .date{
+    font-size:13px;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
+
+  /* --- Glass / progress visual --- */
+  .glass-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:14px 0 6px;
+  }
+  .glass-outer{
+    position:relative;
+    width:168px;
+    height:220px;
+  }
+  svg.glass-svg{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    overflow:visible;
+  }
+  .glass-readout{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none;
+  }
+  .glass-readout .amount{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:34px;
+    color:var(--ocean);
+    line-height:1;
+  }
+  .glass-readout .amount span{
+    font-size:16px;
+    font-weight:500;
+    color:var(--ink-soft);
+  }
+  .glass-readout .goal-label{
+    margin-top:4px;
+    font-size:12px;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
+  .glass-readout .pct{
+    margin-top:2px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--aqua);
+  }
+  .glass-readout .met{
+    color:var(--coral);
+  }
+
+  .wave{
+    animation: waveMove 3.2s linear infinite;
+  }
+  @keyframes waveMove{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-56px); }
+  }
+
+  /* --- Quick add buttons --- */
+  .quick-add{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:22px;
+  }
+  .qa-btn{
+    background:white;
+    border:1px solid var(--mist);
+    border-radius:16px;
+    padding:12px 4px 10px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+    -webkit-user-select:none;user-select:none;
+  }
+  .qa-btn:active{
+    transform:scale(0.94);
+    background:var(--aqua-soft);
+  }
+  .qa-btn .ic{
+    width:26px;height:26px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .qa-btn .lbl{
+    font-size:11.5px;
+    font-weight:600;
+    color:var(--ink);
+    text-align:center;
+    line-height:1.2;
+  }
+  .qa-btn .ml{
+    font-size:10.5px;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
+
+  /* --- Section headers --- */
+  .section-title{
+    margin:30px 2px 10px;
+    font-family:'Fraunces',serif;
+    font-size:16px;
+    font-weight:600;
+    color:var(--ocean);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .section-title .set-goal{
+    font-family:'Work Sans',sans-serif;
+    font-size:12px;
+    font-weight:600;
+    color:var(--aqua);
+    cursor:pointer;
+  }
+
+  /* --- Today's log entries --- */
+  .entry-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .entry{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:white;
+    border:1px solid var(--mist);
+    border-radius:14px;
+    padding:10px 14px;
+    font-size:14px;
+  }
+  .entry .e-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .entry .e-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--aqua);
+    flex:none;
+  }
+  .entry .e-amt{ font-weight:600; }
+  .entry .e-time{ color:var(--ink-soft); font-size:12px; }
+  .entry .e-del{
+    color:var(--ink-soft);
+    font-size:16px;
+    padding:2px 6px;
+    cursor:pointer;
+  }
+  .empty-note{
+    color:var(--ink-soft);
+    font-size:13px;
+    text-align:center;
+    padding:18px 0;
+  }
+
+  /* --- History --- */
+  .history-list{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .h-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:white;
+    border:1px solid var(--mist);
+    border-radius:14px;
+    padding:10px 14px;
+    cursor:pointer;
+  }
+  .h-row .h-date{
+    width:78px;
+    flex:none;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .h-row .h-bar-track{
+    flex:1;
+    height:8px;
+    border-radius:5px;
+    background:var(--mist);
+    overflow:hidden;
+  }
+  .h-row .h-bar-fill{
+    height:100%;
+    border-radius:5px;
+    background:var(--aqua);
+  }
+  .h-row.hit .h-bar-fill{ background:var(--coral); }
+  .h-row .h-total{
+    width:56px;
+    flex:none;
+    text-align:right;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+  }
+  .month-label{
+    margin:18px 2px 8px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .load-more{
+    margin-top:14px;
+    text-align:center;
+    font-size:13px;
+    font-weight:600;
+    color:var(--aqua);
+    cursor:pointer;
+    padding:8px;
+  }
+
+  /* --- Modal --- */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(10,61,92,0.35);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:50;
+  }
+  .overlay.show{ display:flex; }
+  .sheet{
+    background:white;
+    width:100%;
+    max-width:480px;
+    border-radius:24px 24px 0 0;
+    padding:22px 22px calc(24px + env(safe-area-inset-bottom));
+    animation:slideUp .22s ease;
+  }
+  @keyframes slideUp{ from{transform:translateY(24px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+  .sheet h3{
+    font-family:'Fraunces',serif;
+    margin:0 0 16px;
+    color:var(--ocean);
+    font-size:19px;
+  }
+  .sheet input[type=number]{
+    width:100%;
+    font-size:22px;
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    padding:14px 16px;
+    border-radius:14px;
+    border:1px solid var(--mist);
+    background:var(--foam);
+    color:var(--ink);
+    margin-bottom:16px;
+  }
+  .sheet input[type=number]:focus{ outline:2px solid var(--aqua); }
+  .sheet-actions{
+    display:flex;
+    gap:10px;
+  }
+  .sheet-btn{
+    flex:1;
+    padding:14px;
+    border-radius:14px;
+    border:none;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .sheet-btn.cancel{ background:var(--mist); color:var(--ink); }
+  .sheet-btn.confirm{ background:var(--aqua); color:white; }
+
+  .day-detail-title{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:14px;
+  }
+  .day-detail-title .close-x{
+    font-size:20px;color:var(--ink-soft);cursor:pointer;padding:4px 8px;
+  }
+
+  footer{
+    text-align:center;
+    padding:26px 0 4px;
+    font-size:11.5px;
+    color:var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>💧 Waterdrop</h1>
+    <div class="date" id="todayLabel"></div>
+  </header>
+
+  <div class="glass-wrap">
+    <div class="glass-outer">
+      <svg class="glass-svg" viewBox="0 0 168 220" preserveAspectRatio="none">
+        <defs>
+          <clipPath id="glassClip">
+            <path d="M18 6 H150 L136 200 Q134 214 120 214 H48 Q34 214 32 200 Z"/>
+          </clipPath>
+          <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3FD8C9"/>
+            <stop offset="100%" stop-color="#1EA79A"/>
+          </linearGradient>
+        </defs>
+        <!-- glass outline -->
+        <path d="M18 6 H150 L136 200 Q134 214 120 214 H48 Q34 214 32 200 Z"
+              fill="#FFFFFF" stroke="#DCEEF0" stroke-width="3"/>
+        <!-- water fill, height controlled by JS via transform on this group -->
+        <g clip-path="url(#glassClip)">
+          <rect id="waterRect" x="0" y="220" width="168" height="220" fill="url(#waterGrad)"/>
+          <path id="wavePath" class="wave" d="M-56 0 Q -42 -7 -28 0 T 0 0 T 28 0 T 56 0 T 84 0 T 112 0 V 20 H -56 Z" fill="#3FD8C9" opacity="0.55" transform="translate(0,0)"/>
+        </g>
+      </svg>
+      <div class="glass-readout">
+        <div class="amount" id="amountReadout">0<span> ml</span></div>
+        <div class="goal-label" id="goalLabel">of 2500 ml goal</div>
+        <div class="pct" id="pctReadout">0%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="quick-add">
+    <div class="qa-btn" data-amt="150" data-label="Small cup">
+      <div class="ic">🥃</div>
+      <div class="lbl">Small cup</div>
+      <div class="ml">150 ml</div>
+    </div>
+    <div class="qa-btn" data-amt="250" data-label="Regular cup">
+      <div class="ic">🥛</div>
+      <div class="lbl">Regular cup</div>
+      <div class="ml">250 ml</div>
+    </div>
+    <div class="qa-btn" data-amt="400" data-label="Big cup">
+      <div class="ic">🥤</div>
+      <div class="lbl">Big cup</div>
+      <div class="ml">400 ml</div>
+    </div>
+    <div class="qa-btn" data-amt="500" data-label="Thermos">
+      <div class="ic">🍶</div>
+      <div class="lbl">Thermos</div>
+      <div class="ml">500 ml</div>
+    </div>
+    <div class="qa-btn" id="manualBtn">
+      <div class="ic">✏️</div>
+      <div class="lbl">Manual</div>
+      <div class="ml">enter ml</div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    Today
+    <span class="set-goal" id="setGoalBtn">Set goal</span>
+  </div>
+  <div class="entry-list" id="entryList"></div>
+
+  <div class="section-title">History</div>
+  <div id="historyContainer"></div>
+
+  <footer>Made with 💙 — your data stays only on this phone</footer>
+</div>
+
+<!-- Manual entry sheet -->
+<div class="overlay" id="manualOverlay">
+  <div class="sheet">
+    <h3>Add water manually</h3>
+    <input type="number" id="manualInput" placeholder="Amount in ml" inputmode="numeric">
+    <div class="sheet-actions">
+      <button class="sheet-btn cancel" id="manualCancel">Cancel</button>
+      <button class="sheet-btn confirm" id="manualConfirm">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Goal sheet -->
+<div class="overlay" id="goalOverlay">
+  <div class="sheet">
+    <h3>Daily goal</h3>
+    <input type="number" id="goalInput" placeholder="Goal in ml" inputmode="numeric">
+    <div class="sheet-actions">
+      <button class="sheet-btn cancel" id="goalCancel">Cancel</button>
+      <button class="sheet-btn confirm" id="goalConfirm">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Day detail sheet -->
+<div class="overlay" id="dayOverlay">
+  <div class="sheet">
+    <div class="day-detail-title">
+      <h3 id="dayDetailTitle" style="margin:0;">Day</h3>
+      <span class="close-x" id="dayClose">✕</span>
+    </div>
+    <div class="entry-list" id="dayEntryList"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var STORAGE_KEY = 'waterdrop_log_v1';
+  var GOAL_KEY = 'waterdrop_goal_v1';
+  var DEFAULT_GOAL = 2500;
+
+  function todayKey(d){
+    d = d || new Date();
+    var y = d.getFullYear();
+    var m = String(d.getMonth()+1).padStart(2,'0');
+    var day = String(d.getDate()).padStart(2,'0');
+    return y+'-'+m+'-'+day;
+  }
+
+  function loadLog(){
+    try{
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    }catch(e){ return {}; }
+  }
+  function saveLog(log){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(log));
+  }
+  function loadGoal(){
+    var g = parseInt(localStorage.getItem(GOAL_KEY), 10);
+    return isNaN(g) ? DEFAULT_GOAL : g;
+  }
+  function saveGoal(g){
+    localStorage.setItem(GOAL_KEY, String(g));
+  }
+
+  var log = loadLog();
+  var goal = loadGoal();
+
+  var todayLabel = document.getElementById('todayLabel');
+  var amountReadout = document.getElementById('amountReadout');
+  var goalLabel = document.getElementById('goalLabel');
+  var pctReadout = document.getElementById('pctReadout');
+  var entryList = document.getElementById('entryList');
+  var historyContainer = document.getElementById('historyContainer');
+  var waterRect = document.getElementById('waterRect');
+
+  var dateFmt = new Intl.DateTimeFormat('en-US', { weekday:'short', month:'short', day:'numeric' });
+  todayLabel.textContent = dateFmt.format(new Date());
+
+  function totalFor(key){
+    var arr = log[key] || [];
+    return arr.reduce(function(sum, e){ return sum + e.amount; }, 0);
+  }
+
+  function addEntry(amount){
+    var key = todayKey();
+    if(!log[key]) log[key] = [];
+    var now = new Date();
+    log[key].push({
+      amount: amount,
+      time: String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0')
+    });
+    saveLog(log);
+    render();
+  }
+
+  function deleteEntry(key, idx){
+    if(!log[key]) return;
+    log[key].splice(idx,1);
+    if(log[key].length === 0) delete log[key];
+    saveLog(log);
+    render();
+    renderDayDetail(key);
+  }
+
+  function setGlassFill(pct){
+    pct = Math.max(0, Math.min(1, pct));
+    var glassHeight = 208; // approx usable inner height
+    var fillY = 214 - (glassHeight * pct);
+    waterRect.setAttribute('y', fillY);
+    waterRect.setAttribute('height', 220 - fillY + 20);
+    var wave = document.getElementById('wavePath');
+    wave.setAttribute('transform', 'translate(0,' + fillY + ')');
+  }
+
+  function render(){
+    var key = todayKey();
+    var total = totalFor(key);
+    var pct = total / goal;
+
+    amountReadout.innerHTML = total + '<span> ml</span>';
+    goalLabel.textContent = 'of ' + goal + ' ml goal';
+    if(pct >= 1){
+      pctReadout.textContent = 'Goal reached 🎉';
+      pctReadout.classList.add('met');
+    } else {
+      pctReadout.textContent = Math.round(pct*100) + '%';
+      pctReadout.classList.remove('met');
+    }
+    setGlassFill(pct);
+
+    // today's entries
+    var arr = (log[key] || []).slice().reverse();
+    if(arr.length === 0){
+      entryList.innerHTML = '<div class="empty-note">No entries yet today — tap a cup above to log water.</div>';
+    } else {
+      entryList.innerHTML = arr.map(function(e, revIdx){
+        var realIdx = (log[key].length - 1) - revIdx;
+        return '<div class="entry">' +
+          '<div class="e-left"><span class="e-dot"></span><span class="e-amt">' + e.amount + ' ml</span></div>' +
+          '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<span class="e-time">' + e.time + '</span>' +
+          '<span class="e-del" data-key="' + key + '" data-idx="' + realIdx + '">✕</span>' +
+          '</div></div>';
+      }).join('');
+    }
+
+    renderHistory();
+  }
+
+  function renderHistory(){
+    var keys = Object.keys(log).sort().reverse();
+    var todayK = todayKey();
+    keys = keys.filter(function(k){ return k !== todayK; });
+
+    if(keys.length === 0){
+      historyContainer.innerHTML = '<div class="empty-note">Your daily history will show up here.</div>';
+      return;
+    }
+
+    var LIMIT = 30;
+    historyContainer.innerHTML = buildHistoryHtml(keys.slice(0, LIMIT));
+
+    if(keys.length > LIMIT){
+      var more = document.createElement('div');
+      more.className = 'load-more';
+      more.textContent = 'Show more days';
+      more.onclick = function(){
+        historyContainer.innerHTML = buildHistoryHtml(keys);
+        bindHistoryRowClicks();
+      };
+      historyContainer.appendChild(more);
+    }
+    bindHistoryRowClicks();
+  }
+
+  function buildHistoryHtml(keys){
+    var monthFmt = new Intl.DateTimeFormat('en-US', { month:'long', year:'numeric' });
+    var dayFmt = new Intl.DateTimeFormat('en-US', { weekday:'short', day:'numeric' });
+    var lastMonth = null;
+    var html = '';
+    var openList = false;
+    keys.forEach(function(k){
+      var d = new Date(k + 'T00:00:00');
+      var monthKey = monthFmt.format(d);
+      if(monthKey !== lastMonth){
+        if(openList) html += '</div>';
+        html += '<div class="month-label">' + monthKey + '</div><div class="history-list">';
+        openList = true;
+        lastMonth = monthKey;
+      }
+      var total = totalFor(k);
+      var pct = Math.min(1, total/goal);
+      var hit = total >= goal;
+      html += '<div class="h-row' + (hit? ' hit':'') + '" data-key="' + k + '">' +
+        '<div class="h-date">' + dayFmt.format(d) + '</div>' +
+        '<div class="h-bar-track"><div class="h-bar-fill" style="width:' + (pct*100) + '%"></div></div>' +
+        '<div class="h-total">' + total + ' ml</div>' +
+        '</div>';
+    });
+    if(openList) html += '</div>';
+    return html;
+  }
+
+  function bindHistoryRowClicks(){
+    document.querySelectorAll('.h-row').forEach(function(row){
+      row.onclick = function(){
+        renderDayDetail(row.getAttribute('data-key'));
+        document.getElementById('dayOverlay').classList.add('show');
+      };
+    });
+  }
+
+  function renderDayDetail(key){
+    var d = new Date(key + 'T00:00:00');
+    var fmt = new Intl.DateTimeFormat('en-US', { weekday:'long', month:'long', day:'numeric' });
+    document.getElementById('dayDetailTitle').textContent = fmt.format(d);
+    var arr = (log[key] || []);
+    var list = document.getElementById('dayEntryList');
+    if(arr.length === 0){
+      list.innerHTML = '<div class="empty-note">No entries for this day.</div>';
+      return;
+    }
+    list.innerHTML = arr.map(function(e, idx){
+      return '<div class="entry">' +
+        '<div class="e-left"><span class="e-dot"></span><span class="e-amt">' + e.amount + ' ml</span></div>' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<span class="e-time">' + e.time + '</span>' +
+        '<span class="e-del" data-key="' + key + '" data-idx="' + idx + '">✕</span>' +
+        '</div></div>';
+    }).join('') + '<div class="h-total" style="text-align:left;margin-top:8px;">Total: ' + totalFor(key) + ' ml</div>';
+  }
+
+  // --- Event bindings ---
+  document.querySelectorAll('.qa-btn[data-amt]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      addEntry(parseInt(btn.getAttribute('data-amt'),10));
+    });
+  });
+
+  document.getElementById('manualBtn').addEventListener('click', function(){
+    document.getElementById('manualInput').value = '';
+    document.getElementById('manualOverlay').classList.add('show');
+    setTimeout(function(){ document.getElementById('manualInput').focus(); }, 100);
+  });
+  document.getElementById('manualCancel').addEventListener('click', function(){
+    document.getElementById('manualOverlay').classList.remove('show');
+  });
+  document.getElementById('manualConfirm').addEventListener('click', function(){
+    var v = parseInt(document.getElementById('manualInput').value, 10);
+    if(v && v > 0){
+      addEntry(v);
+      document.getElementById('manualOverlay').classList.remove('show');
+    }
+  });
+
+  document.getElementById('setGoalBtn').addEventListener('click', function(){
+    document.getElementById('goalInput').value = goal;
+    document.getElementById('goalOverlay').classList.add('show');
+    setTimeout(function(){ document.getElementById('goalInput').focus(); }, 100);
+  });
+  document.getElementById('goalCancel').addEventListener('click', function(){
+    document.getElementById('goalOverlay').classList.remove('show');
+  });
+  document.getElementById('goalConfirm').addEventListener('click', function(){
+    var v = parseInt(document.getElementById('goalInput').value, 10);
+    if(v && v > 0){
+      goal = v;
+      saveGoal(goal);
+      document.getElementById('goalOverlay').classList.remove('show');
+      render();
+    }
+  });
+
+  document.getElementById('dayClose').addEventListener('click', function(){
+    document.getElementById('dayOverlay').classList.remove('show');
+  });
+
+  // delegated delete for today's entries
+  entryList.addEventListener('click', function(ev){
+    if(ev.target.classList.contains('e-del')){
+      deleteEntry(ev.target.getAttribute('data-key'), parseInt(ev.target.getAttribute('data-idx'),10));
+    }
+  });
+  document.getElementById('dayEntryList').addEventListener('click', function(ev){
+    if(ev.target.classList.contains('e-del')){
+      deleteEntry(ev.target.getAttribute('data-key'), parseInt(ev.target.getAttribute('data-idx'),10));
+    }
+  });
+
+  // close overlays on backdrop tap
+  document.querySelectorAll('.overlay').forEach(function(ov){
+    ov.addEventListener('click', function(ev){
+      if(ev.target === ov) ov.classList.remove('show');
+    });
+  });
+
+  render();
+
+  // Register service worker for basic offline support (optional, best-effort)
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  }
+})();
+</script>
+</body>
+</html>
